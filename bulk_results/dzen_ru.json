@@ -1,0 +1,32 @@
+[
+  {
+    "subdomain": "www.dzen.ru",
+    "ip": "185.180.200.2",
+    "reverse_dns": null,
+    "scheme": "http",
+    "url": "http://www.dzen.ru",
+    "status": 200,
+    "length": 1965,
+    "title": null,
+    "content_hash": "436fc02659c2f47c4a83ca248eb0df9ab47a8a123c011bba4f5556bf70114c07",
+    "server_header": "",
+    "ssl_sans": "",
+    "open_ports": "80,443",
+    "banners": "{\"80\": \"HTTP/1.1 302 Moved temporarily\\r\\nContent-Length: 0\\r\\nLocation: https:///\\r\\n\\r\\n\", \"443\": null}"
+  },
+  {
+    "subdomain": "www.dzen.ru",
+    "ip": "185.180.200.2",
+    "reverse_dns": null,
+    "scheme": "https",
+    "url": "https://www.dzen.ru",
+    "status": 200,
+    "length": 1965,
+    "title": null,
+    "content_hash": "635a77448b349722bca4007b6ff6438e430d361d9c7925d874bbccb241544707",
+    "server_header": "",
+    "ssl_sans": "*.dzen.ru, dzen.ru",
+    "open_ports": "80,443",
+    "banners": "{\"80\": \"HTTP/1.1 302 Moved temporarily\\r\\nContent-Length: 0\\r\\nLocation: https:///\\r\\n\\r\\n\", \"443\": null}"
+  }
+]

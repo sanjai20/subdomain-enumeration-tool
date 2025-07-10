@@ -1,1 +1,15 @@
-__pycache__/\n*.pyc\n*.log\nvenv/\nenv/
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+

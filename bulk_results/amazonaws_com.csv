@@ -1,0 +1,2 @@
+subdomain,ip,reverse_dns,scheme,url,status,length,title,content_hash,server_header,ssl_sans,open_ports,banners
+www.amazonaws.com,72.21.210.29,210-29.amazon.com,http,http://www.amazonaws.com,200,489181,Cloud Computing Services - Amazon Web Services (AWS),7405faaeff60e46629b02a4bb87b35ed590a2a9fea382b136c63fac4cba22f4a,Server,,80,"{""80"": ""HTTP/1.1 302 Found\r\nDate: Thu, 10 Jul 2025 18:21:02 GMT\r\nServer: Server\r\nLocation: http://www.amazon.com/gp/help/customer/display.html/?nodeId=508510\r\nConnection: close\r\nContent-Type: text/html; charset=iso-8859-1\r\n\r\n""}"
