@@ -1,0 +1,7 @@
+www
+mail
+api
+ftp
+dev
+test
+beta

@@ -1,0 +1,8 @@
+2025-07-10 19:41:59,103 - WARNING - Unresolvable: mail.youtube.com
+2025-07-10 19:41:59,103 - WARNING - Unresolvable: api.youtube.com
+2025-07-10 19:41:59,106 - WARNING - Unresolvable: beta.youtube.com
+2025-07-10 19:41:59,106 - WARNING - Unresolvable: test.youtube.com
+2025-07-10 19:41:59,106 - WARNING - Unresolvable: dev.youtube.com
+2025-07-10 19:41:59,106 - WARNING - Unresolvable: ftp.youtube.com
+2025-07-10 19:41:59,567 - INFO - [+] Found: http://www.youtube.com (200)
+2025-07-10 19:42:00,217 - INFO - [+] Found: https://www.youtube.com (200)
