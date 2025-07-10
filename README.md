@@ -1,7 +1,6 @@
 # Subdomain Enumeration Tool
 
-A fast, multithreaded Python tool for discovering subdomains of a target domain.  
-Useful for cybersecurity reconnaissance, bug bounty hunting, and infrastructure mapping.
+A fast, multithreaded Python tool for discovering subdomains of a target domain, now enhanced to support **bulk scanning of popular domains** from the Tranco Top 1 Million list.
 
 ![Python](https://img.shields.io/badge/python-3.7%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -11,37 +10,63 @@ Useful for cybersecurity reconnaissance, bug bounty hunting, and infrastructure 
 
 ## 🚀 Features
 
-✅ Supports both **HTTP** and **HTTPS**  
-✅ Multithreaded scanning for speed  
-✅ DNS resolution checks to avoid unnecessary HTTP requests  
-✅ Logs results and errors to a log file  
-✅ Progress bar with `tqdm` for real-time updates  
-✅ Rate limiting to avoid getting blocked  
-✅ Command-line interface with flexible options  
-✅ Outputs discovered subdomains to a file
+✅ Subdomain scanning using:
+- Wordlists
+- Historical data from the Wayback Machine
+- Optional AI-driven predictions (OpenAI)
+
+✅ Supports both HTTP and HTTPS scanning
+
+✅ DNS resolution checks to avoid unnecessary requests
+
+✅ Detects wildcard DNS to reduce false positives
+
+✅ Reverse DNS lookups for discovered IPs
+
+✅ SSL certificate SAN (Subject Alternative Names) enumeration
+
+✅ Port scanning for popular ports (optional)
+
+✅ Banner grabbing for open ports
+
+✅ Response fingerprinting via SHA-256 hashes
+
+✅ Colorized console output for better readability
+
+✅ Progress bar for tracking scanning progress
+
+✅ CSV and JSON result exports
+
+✅ Bulk scanning for lists of domains (e.g. Tranco Top 1M)
 
 ---
 
 ## 🛠 Installation
 
-First, clone this repository:
+Clone this repository:
 
 ```bash
 git clone https://github.com/sanjai20/subdomain-enumeration-tool.git
 cd subdomain-enumeration-tool
 ```
 
-Install required Python packages:
+Install dependencies:
 
 ```bash
-pip install requests tqdm
+pip install -r requirements.txt
+```
+
+If you plan to use AI-driven predictions, also install OpenAI’s SDK:
+
+```bash
+pip install openai
 ```
 
 ---
 
-## 📄 Usage
+## 📄 Single-Domain Usage
 
-Basic scan:
+Run the tool on a single target domain:
 
 ```bash
 python subdomain_enum.py example.com
@@ -50,72 +75,93 @@ python subdomain_enum.py example.com
 Advanced usage:
 
 ```bash
-python subdomain_enum.py example.com -w subdomains.txt -o results.txt -r 0.5
+python subdomain_enum.py example.com \
+    -w subdomains.txt \
+    -o results.csv \
+    --json results.json \
+    --https \
+    --ports 22,80,443 \
+    --openai YOUR_OPENAI_API_KEY
 ```
 
-| Option                | Description                                  |
-|------------------------|----------------------------------------------|
-| `example.com`         | Domain to scan                               |
-| `-w subdomains.txt`   | Path to subdomain wordlist (default: `subdomains.txt`) |
-| `-o results.txt`      | Output file for discovered subdomains (default: `discovered_subdomains.txt`) |
-| `-r 0.5`              | Delay (in seconds) between requests (default: 0.2) |
+| Option                  | Description |
+|--------------------------|-------------|
+| `example.com`           | The target domain to scan |
+| `-w subdomains.txt`     | Path to wordlist file |
+| `-o results.csv`        | Output CSV file |
+| `--json results.json`   | Optional JSON output file |
+| `--https`               | Scan HTTPS endpoints |
+| `--ports 22,80,443`     | Ports to scan on discovered subdomains |
+| `--openai API_KEY`      | Use OpenAI to predict likely subdomains |
 
 ---
 
-## 🔍 Example
+## 🔍 Example Output
 
-Sample wordlist (`subdomains.txt`):
+Discovered subdomains will be saved in CSV and/or JSON formats, e.g.:
 
-```
-www
-mail
-api
-ftp
-blog
-test
-```
+**CSV Example:**
 
-Run the tool:
+| subdomain            | ip               | scheme | url                      | status | server_header     |
+|----------------------|------------------|--------|--------------------------|--------|-------------------|
+| www.example.com      | 93.184.216.34    | http   | http://www.example.com   | 200    | nginx/1.18.0      |
+
+---
+
+## 🗂 Bulk Scanning with Tranco List
+
+You can scan multiple popular domains automatically using the included `bulk_scan.py` script.
+
+### Prepare a Tranco List
+
+Download the `top-1m.csv` from:
+- [https://tranco-list.eu](https://tranco-list.eu)
+
+Place it in your project directory as `top-1m.csv`.
+
+---
+
+### Run Bulk Scan
+
+Scan the top N domains:
 
 ```bash
-python subdomain_enum.py youtube.com -w subdomains.txt -o found.txt -r 0.3
+python bulk_scan.py
 ```
 
-Sample output saved in `found.txt`:
+By default, it scans the top 10 domains. Edit `bulk_scan.py` to increase this limit.
 
+Each scanned domain will produce:
 ```
-http://www.youtube.com (200)
-https://mail.youtube.com (200)
-```
-
-Logs are stored in:
-
-```
-subdomain_enum.log
+bulk_results/example_com.csv
+bulk_results/example_com.json
 ```
 
 ---
 
-## 💡 How It Works
+## ⚠️ Important Notes
 
-- Loads subdomain names from a file
-- Resolves each subdomain using DNS
-- Sends HTTP/HTTPS requests to check availability
-- Runs threads concurrently for speed
-- Logs results and errors
-- Saves discovered subdomains to an output file
+- Scanning a large list like Tranco Top 1M can be resource-intensive.
+- Respect the legal and ethical boundaries of scanning.
+- Be mindful of rate limits and avoid aggressive scanning that could get your IP blocked.
 
 ---
 
-## 📝 License
+## 💡 Upcoming Enhancements
 
-This project is licensed under the MIT License.
+Planned next steps:
+- Integrate Shodan and Censys lookups
+- Add SQLite or Postgres database storage
+- Slack/Discord alerting
+- Screenshots of discovered subdomains
+- Multi-threaded or async bulk scanning
+- Cloud provider detection (AWS, Azure, GCP)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to open a PR or issue.
+Contributions are welcome! Feel free to open an issue or pull request.
 
 ---
 
@@ -125,3 +171,7 @@ Contributions, issues, and feature requests are welcome! Feel free to open a PR 
 [GitHub Profile](https://github.com/sanjai20)
 
 ---
+
+## 📝 License
+
+This project is licensed under the MIT License.
