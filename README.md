@@ -1,177 +1,206 @@
 # Subdomain Enumeration Tool
 
-A fast, multithreaded Python tool for discovering subdomains of a target domain, now enhanced to support **bulk scanning of popular domains** from the Tranco Top 1 Million list.
-
-![Python](https://img.shields.io/badge/python-3.7%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Build](https://img.shields.io/badge/status-active-brightgreen)
+A Python-based subdomain discovery and reconnaissance tool designed for scanning single domains or performing bulk enumeration across the Tranco Top-1M domain list. Results are saved into a centralized SQLite database for powerful querying and analysis.
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
-✅ Subdomain scanning using:
-- Wordlists
-- Historical data from the Wayback Machine
-- Optional AI-driven predictions (OpenAI)
+✅ Subdomain discovery:
+- Wordlist-based enumeration
+- Wayback Machine integrations
 
-✅ Supports both HTTP and HTTPS scanning
+✅ HTTP/HTTPS probing:
+- HTTP status codes
+- Server headers
+- Page titles
+- Response lengths
+- SSL certificate SANs
 
-✅ DNS resolution checks to avoid unnecessary requests
+✅ Optional port scanning
 
-✅ Detects wildcard DNS to reduce false positives
+✅ Wildcard domain detection
 
-✅ Reverse DNS lookups for discovered IPs
+✅ Saves results to:
+- CSV
+- JSON
+- SQLite database
 
-✅ SSL certificate SAN (Subject Alternative Names) enumeration
+✅ Bulk scanning support:
+- Integrate large domain lists
+- Parallel scanning
 
-✅ Port scanning for popular ports (optional)
-
-✅ Banner grabbing for open ports
-
-✅ Response fingerprinting via SHA-256 hashes
-
-✅ Colorized console output for better readability
-
-✅ Progress bar for tracking scanning progress
-
-✅ CSV and JSON result exports
-
-✅ Bulk scanning for lists of domains (e.g. Tranco Top 1M)
+✅ Database-ready for analytics:
+- Query scan results
+- Export filtered data
 
 ---
 
-## 🛠 Installation
+## ⚙️ Requirements
 
-Clone this repository:
-
-```bash
-git clone https://github.com/sanjai20/subdomain-enumeration-tool.git
-cd subdomain-enumeration-tool
-```
-
-Install dependencies:
+- Python 3.x
+- Install dependencies:
 
 ```bash
-pip install -r requirements.txt
-```
-
-If you plan to use AI-driven predictions, also install OpenAI’s SDK:
-
-```bash
-pip install openai
+pip install requests tqdm colorama
 ```
 
 ---
 
-## 📄 Single-Domain Usage
+## 🚀 How to Use
 
-Run the tool on a single target domain:
+### Single Domain Scan
 
-```bash
-python subdomain_enum.py example.com
+Run the tool on one domain:
+
+```powershell
+python subdomain_enum.py example.com --https --ports 80,443
 ```
 
-Advanced usage:
+- `--https` → scan both HTTP and HTTPS
+- `--ports` → scan custom ports (comma-separated)
 
-```bash
-python subdomain_enum.py example.com \
-    -w subdomains.txt \
-    -o results.csv \
-    --json results.json \
-    --https \
-    --ports 22,80,443 \
-    --openai YOUR_OPENAI_API_KEY
+Example output:
+
+```
+[+] http://www.example.com (200)
+[+] https://www.example.com (200)
+Saved CSV to results.csv
+Saved JSON to results.json
 ```
 
-| Option                  | Description |
-|--------------------------|-------------|
-| `example.com`           | The target domain to scan |
-| `-w subdomains.txt`     | Path to wordlist file |
-| `-o results.csv`        | Output CSV file |
-| `--json results.json`   | Optional JSON output file |
-| `--https`               | Scan HTTPS endpoints |
-| `--ports 22,80,443`     | Ports to scan on discovered subdomains |
-| `--openai API_KEY`      | Use OpenAI to predict likely subdomains |
-
 ---
 
-## 🔍 Example Output
+### Bulk Scanning (Top 1 Million Domains)
 
-Discovered subdomains will be saved in CSV and/or JSON formats, e.g.:
+Your tool supports bulk scans from the Tranco Top-1M list.
 
-**CSV Example:**
+#### 1. Place your Tranco CSV file:
 
-| subdomain            | ip               | scheme | url                      | status | server_header     |
-|----------------------|------------------|--------|--------------------------|--------|-------------------|
-| www.example.com      | 93.184.216.34    | http   | http://www.example.com   | 200    | nginx/1.18.0      |
+```
+E:\subdomain_ennumeration_Project\top-1m.csv
+```
 
----
+#### 2. Edit bulk_scan.py
 
-## 🗂 Bulk Scanning with Tranco List
+Set how many domains you wish to scan:
 
-You can scan multiple popular domains automatically using the included `bulk_scan.py` script.
+```python
+domains = read_tranco_csv("top-1m.csv", limit=20)
+```
 
-### Prepare a Tranco List
+#### 3. Run bulk scan:
 
-Download the `top-1m.csv` from:
-- [https://tranco-list.eu](https://tranco-list.eu)
-
-Place it in your project directory as `top-1m.csv`.
-
----
-
-### Run Bulk Scan
-
-Scan the top N domains:
-
-```bash
+```powershell
 python bulk_scan.py
 ```
 
-By default, it scans the top 10 domains. Edit `bulk_scan.py` to increase this limit.
+Results are saved as separate CSV/JSON files in:
 
-Each scanned domain will produce:
 ```
-bulk_results/example_com.csv
-bulk_results/example_com.json
+bulk_results/
 ```
 
----
-
-## ⚠️ Important Notes
-
-- Scanning a large list like Tranco Top 1M can be resource-intensive.
-- Respect the legal and ethical boundaries of scanning.
-- Be mindful of rate limits and avoid aggressive scanning that could get your IP blocked.
+…and inserted into the SQLite database.
 
 ---
 
-## 💡 Upcoming Enhancements
+## 💾 Database Storage
 
-Planned next steps:
-- Integrate Shodan and Censys lookups
-- Add SQLite or Postgres database storage
-- Slack/Discord alerting
-- Screenshots of discovered subdomains
-- Multi-threaded or async bulk scanning
-- Cloud provider detection (AWS, Azure, GCP)
+All scan results are saved into:
+
+```
+subdomain_scans.db
+```
+
+Schema example:
+
+| Field            | Description                      |
+|------------------|-----------------------------------|
+| domain           | e.g. example.com                  |
+| subdomain        | e.g. www.example.com              |
+| ip               | resolved IP address               |
+| reverse_dns      | PTR record                        |
+| scheme           | http / https                      |
+| url              | full URL                          |
+| status           | HTTP response code                |
+| length           | page size                         |
+| title            | HTML title tag                    |
+| content_hash     | SHA256 hash of page content       |
+| server_header    | Server header                     |
+| ssl_sans         | SSL Subject Alternative Names     |
+| open_ports       | scanned open ports                |
+| banners          | banner grab from open ports       |
 
 ---
 
-## 🤝 Contributing
+## 🔎 Query Your Data
 
-Contributions are welcome! Feel free to open an issue or pull request.
+Example SQL queries:
+
+### Show all successful subdomains
+
+```sql
+SELECT subdomain, url, status
+FROM scan_results
+WHERE status = 200;
+```
 
 ---
 
-## 🙋‍♂️ Author
+### Find servers running Nginx
 
-**Sanjai**  
-[GitHub Profile](https://github.com/sanjai20)
+```sql
+SELECT domain, subdomain, server_header
+FROM scan_results
+WHERE server_header LIKE '%nginx%';
+```
 
 ---
 
-## 📝 License
+### List subdomains with open ports
 
-This project is licensed under the MIT License.
+```sql
+SELECT domain, subdomain, open_ports
+FROM scan_results
+WHERE open_ports IS NOT NULL AND open_ports <> '';
+```
+
+---
+
+### Filter by specific domain
+
+```sql
+SELECT *
+FROM scan_results
+WHERE domain = 'facebook.com';
+```
+
+---
+
+## 📊 Exporting Data
+
+From DB Browser for SQLite:
+- Export tables as CSV or JSON
+- Build reports and dashboards
+
+---
+
+## 🌟 Future Enhancements
+
+- Threat intelligence integration:
+  - Shodan
+  - VirusTotal
+- Dashboard visualization
+- Vulnerability detection
+
+---
+
+## 🤝 Disclaimer
+
+This tool is for **educational and security research purposes only.**  
+Do not scan domains you do not own or have permission to test.
+
+---
+
+Built for research, bug bounty, and large-scale asset discovery.
