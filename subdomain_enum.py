@@ -1,3 +1,5 @@
+# subdomain_enum.py
+
 import requests
 import socket
 import argparse
@@ -10,24 +12,21 @@ import ssl
 from tqdm import tqdm
 from colorama import Fore, Style
 from urllib.parse import urlparse
+import os
 
-# Optional: for AI-driven prediction
-try:
-    import openai
-except ImportError:
-    openai = None
+from db_utils import init_db, save_result
 
-# -----------------------------------------
+# -----------------------------
 # CONFIG
-# -----------------------------------------
+# -----------------------------
 
 MAX_RETRIES = 3
 TIMEOUT = 5
 RATE_LIMIT = 0.3
 
-# -----------------------------------------
+# -----------------------------
 # Wildcard Detection
-# -----------------------------------------
+# -----------------------------
 
 def check_wildcard(domain):
     random_sub = f"randomxyz987.{domain}"
@@ -38,9 +37,9 @@ def check_wildcard(domain):
     except socket.gaierror:
         return None
 
-# -----------------------------------------
+# -----------------------------
 # DNS Resolution
-# -----------------------------------------
+# -----------------------------
 
 def resolve_domain(subdomain, domain):
     fqdn = f"{subdomain}.{domain}"
@@ -50,9 +49,9 @@ def resolve_domain(subdomain, domain):
     except socket.gaierror:
         return fqdn, None
 
-# -----------------------------------------
+# -----------------------------
 # Reverse DNS
-# -----------------------------------------
+# -----------------------------
 
 def reverse_dns(ip):
     try:
@@ -61,9 +60,9 @@ def reverse_dns(ip):
     except:
         return None
 
-# -----------------------------------------
-# SSL SAN Enumeration
-# -----------------------------------------
+# -----------------------------
+# SSL Certificate SANs
+# -----------------------------
 
 def get_ssl_sans(hostname):
     try:
@@ -82,9 +81,9 @@ def get_ssl_sans(hostname):
     except Exception:
         return []
 
-# -----------------------------------------
-# HTTP Check with Fingerprinting
-# -----------------------------------------
+# -----------------------------
+# HTTP Check
+# -----------------------------
 
 def check_http(fqdn, scheme):
     url = f"{scheme}://{fqdn}"
@@ -114,9 +113,9 @@ def get_title(html_text):
         return html_text[start:end].strip()
     return None
 
-# -----------------------------------------
-# Banner Grabbing on Other Ports
-# -----------------------------------------
+# -----------------------------
+# Banner Grabbing
+# -----------------------------
 
 def grab_banner(host, port):
     try:
@@ -129,9 +128,9 @@ def grab_banner(host, port):
     except:
         return None
 
-# -----------------------------------------
+# -----------------------------
 # Port Scanning
-# -----------------------------------------
+# -----------------------------
 
 def scan_ports(hostname, ports):
     open_ports = []
@@ -149,9 +148,9 @@ def scan_ports(hostname, ports):
             pass
     return open_ports, banners
 
-# -----------------------------------------
-# Wayback Machine Historical Lookup
-# -----------------------------------------
+# -----------------------------
+# Wayback Lookup
+# -----------------------------
 
 def wayback_lookup(domain):
     url = f"http://web.archive.org/cdx/search/cdx?url=*.{domain}&output=json&fl=original"
@@ -173,36 +172,9 @@ def wayback_lookup(domain):
     except:
         return []
 
-# -----------------------------------------
-# AI-driven Prediction
-# -----------------------------------------
-
-def predict_subdomains(domain, openai_key=None):
-    if openai is None or openai_key is None:
-        print(f"{Fore.YELLOW}[!] Skipping AI prediction because OpenAI API key is not set.{Style.RESET_ALL}")
-        return []
-
-    openai.api_key = openai_key
-    prompt = f"List common subdomains that might exist for the domain {domain}. Only list words, one per line."
-
-    try:
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role":"system","content":"You are a helpful assistant."},
-                {"role":"user","content": prompt}
-            ]
-        )
-        text = completion.choices[0].message.content.strip()
-        subs = [line.strip() for line in text.split("\n") if line.strip()]
-        return subs
-    except Exception as e:
-        print(f"{Fore.RED}[!] Error in AI prediction: {e}{Style.RESET_ALL}")
-        return []
-
-# -----------------------------------------
+# -----------------------------
 # Save to CSV
-# -----------------------------------------
+# -----------------------------
 
 def save_csv(results, output):
     keys = results[0].keys()
@@ -212,17 +184,17 @@ def save_csv(results, output):
         for row in results:
             writer.writerow(row)
 
-# -----------------------------------------
+# -----------------------------
 # Save to JSON
-# -----------------------------------------
+# -----------------------------
 
 def save_json(results, output):
     with open(output, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
 
-# -----------------------------------------
+# -----------------------------
 # Main Scanning Logic
-# -----------------------------------------
+# -----------------------------
 
 def main():
     parser = argparse.ArgumentParser()
@@ -232,15 +204,15 @@ def main():
     parser.add_argument("--json", help="Also save results to JSON file")
     parser.add_argument("--https", action="store_true", help="Test HTTPS in addition to HTTP")
     parser.add_argument("--ports", help="Comma-separated list of ports to scan (e.g. 22,80,443)")
-    parser.add_argument("--openai", help="OpenAI API key for AI subdomain prediction")
 
     args = parser.parse_args()
     domain = args.domain
     port_list = [int(p.strip()) for p in args.ports.split(",")] if args.ports else []
 
+    init_db()
+
     wildcard_ip = check_wildcard(domain)
 
-    # Load initial subdomains from file
     subdomains = []
     try:
         with open(args.wordlist, "r", encoding="utf-8") as f:
@@ -248,19 +220,11 @@ def main():
     except FileNotFoundError:
         print(f"{Fore.YELLOW}[-] Wordlist not found. Continuing without it.{Style.RESET_ALL}")
 
-    # Add Wayback subdomains
     wb_subs = wayback_lookup(domain)
     if wb_subs:
         print(f"{Fore.CYAN}[+] Found {len(wb_subs)} subdomains from Wayback Machine.{Style.RESET_ALL}")
         subdomains.extend(wb_subs)
 
-    # Add AI-predicted subdomains
-    ai_subs = predict_subdomains(domain, args.openai)
-    if ai_subs:
-        print(f"{Fore.CYAN}[+] Found {len(ai_subs)} AI-predicted subdomains.{Style.RESET_ALL}")
-        subdomains.extend(ai_subs)
-
-    # Remove duplicates
     subdomains = list(sorted(set(subdomains)))
 
     results = []
@@ -280,6 +244,7 @@ def main():
                 if res:
                     sans = get_ssl_sans(fqdn) if scheme == "https" else []
                     row = {
+                        "domain": domain,
                         "subdomain": fqdn,
                         "ip": ip,
                         "reverse_dns": ptr,
@@ -296,6 +261,8 @@ def main():
                     }
                     with lock:
                         results.append(row)
+                        # ✅ Save to database!
+                        save_result(row)
                         color = Fore.GREEN if res["status"] < 400 else Fore.YELLOW
                         print(f"{color}[+] {res['url']} ({res['status']}){Style.RESET_ALL}")
 

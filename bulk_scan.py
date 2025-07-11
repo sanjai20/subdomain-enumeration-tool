@@ -1,37 +1,42 @@
 import csv
 import subprocess
+from multiprocessing import Pool
+import os
 import time
 
-def read_tranco_csv(path, limit=10):
+def read_tranco_csv(path, limit=None):
     domains = []
     with open(path, newline="", encoding="utf-8") as csvfile:
         reader = csv.reader(csvfile)
         next(reader)  # skip header
         for row in reader:
             domains.append(row[1].strip())
-            if len(domains) >= limit:
+            if limit and len(domains) >= limit:
                 break
     return domains
 
-def run_scan(domain, ports="80,443", use_https=True, output_dir="bulk_results"):
+def worker(domain):
+    output_dir = "bulk_results"
+    os.makedirs(output_dir, exist_ok=True)
+
     cmd = [
-        "python", "subdomain_enum.py",
+        "python",
+        "subdomain_enum.py",
         domain,
-        "--ports", ports,
+        "--ports", "80,443",
+        "--https",
         "-o", f"{output_dir}/{domain.replace('.', '_')}.csv",
         "--json", f"{output_dir}/{domain.replace('.', '_')}.json"
     ]
-    if use_https:
-        cmd.append("--https")
+
     print(f"[*] Scanning {domain} ...")
-    subprocess.run(cmd)
+    subprocess.run(cmd, timeout=300)
 
 def main():
-    domains = read_tranco_csv("top-1m.csv", limit=10)
+    domains = read_tranco_csv("top-1m.csv", limit=20)
 
-    for domain in domains:
-        run_scan(domain)
-        time.sleep(1)  # optional delay to prevent being blocked
+    with Pool(processes=4) as pool:
+        pool.map(worker, domains)
 
 if __name__ == "__main__":
     main()
